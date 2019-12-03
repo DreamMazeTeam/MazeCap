@@ -1,2 +1,2 @@
 # MazeCap
-По робота для RoboCap2020
+П.O. робота для RoboCap2020
