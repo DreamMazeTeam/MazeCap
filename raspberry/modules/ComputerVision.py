@@ -20,6 +20,7 @@ if __name__ == "__main__":
 else:
     TM_PATH = "templates\\"
 
+TAG = "Computer Vision"
 CONST_TEMPLATE_SIZE = (10, 15)
 TEMPLATE_MATCH_VALUE = 0.85
 TEMPLATES = {
@@ -147,8 +148,7 @@ def captureCamera(camera: cv2.VideoCapture, tag: str = None):
         yield None
 
 
-# todo
-# Главная функция
+# Главный генератор
 # аргуметы аргс и кв для красоты)
 # возвращает целое число, поже для обработки ошибок
 # когда поставим код на робота нужно будет переписать
