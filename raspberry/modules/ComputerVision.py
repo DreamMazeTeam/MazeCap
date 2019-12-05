@@ -35,7 +35,7 @@ COLORS = {
     "yellow": [np.array((25, 250, 250), np.uint8), np.array((35, 255, 255), np.uint8)],
     "red": [np.array((0, 250, 250), np.uint8), np.array((10, 255, 255), np.uint8)]
 }
-CC_DATA = {}
+DATA = {}
 
 
 # Фунция для работы с окнами в cv2.namedWindow
@@ -43,7 +43,7 @@ CC_DATA = {}
 def mouseCallback(event, x, y, flag, param) -> None:
     # Ставит камеру на паузу
     if event == cv2.EVENT_LBUTTONDBLCLK:
-        CC_DATA[param][0] = not CC_DATA[param][0]
+        DATA[param][0] = not DATA[param][0]
 
 
 # Функция поиска контуров в кадре
@@ -128,15 +128,15 @@ def getColorFromFrame(frame: np.ndarray) -> str:
 # {тэг: [статус, буква, цвет] }, пример: {"camera_left: [True, "H", "red"]}
 # статус показывает работает ли камера или нет
 def captureCamera(camera: cv2.VideoCapture, tag: str = None):
-    CC_DATA[tag] = [True, "", ""]
+    DATA[tag] = [True, "", ""]
     yield None
 
     while camera.isOpened():
         flag, frame = camera.read()
 
-        if flag and CC_DATA[tag][0]:
+        if flag and DATA[tag][0]:
 
-            CC_DATA[tag] = [
+            DATA[tag] = [
                 True,
                 getLetterFromFrame(frame),
                 getColorFromFrame(frame)
@@ -169,7 +169,7 @@ def main(*args, **kwargs):
 
     # Привязываем фунцию обработки мыши
     if argv.show:
-        for tag in CC_DATA:
+        for tag in DATA:
             cv2.namedWindow(tag)
             cv2.setMouseCallback(tag, mouseCallback, param=tag)
 
@@ -177,6 +177,8 @@ def main(*args, **kwargs):
     yield 1
 
     while True:
+        data = yield None
+
         for camera in queue:
             camera.send(None)
 
@@ -192,7 +194,7 @@ def main(*args, **kwargs):
                 if key == b'1':
                     break
 
-        yield None
+        yield TAG, DATA
 
     cap.release()
     yield 0
