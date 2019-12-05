@@ -195,7 +195,7 @@ def captureCamera(camera: cv2.VideoCapture, tag: str = None):
     CAMERA_SETTINGS[tag] = {"HSV": False}
     yield None
 
-    if argv.debug:
+    if argv.debug and argv.show:
         cv2.namedWindow(tag)
         cv2.setMouseCallback(tag, mouseCallback, param=tag)
 
@@ -261,7 +261,6 @@ def main(*args, **kwargs):
 
 
 if __name__ == "__main__":
-    argv = parser.parse_args("-d --show local".split())
     mod = main()
     while mod.send(None) != 0:
         pass
