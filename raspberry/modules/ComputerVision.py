@@ -59,6 +59,27 @@ def mouseCallback(event, x, y, flag, param) -> None:
         DATA[param][0] = not DATA[param][0]  # Ставит камеру на паузу
 
 
+# Ввод с клавиатуры
+# Метод чтения зависит от флага запуска
+# Если есть флаг --show то чтение будет происходить через cv2
+# Иначе с помощью модуля msvcrt
+def keyboardInput(*args, **kwargs) -> int:
+    if argv.show:
+
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'):
+            cv2.destroyAllWindows()
+            return -1
+
+    else:
+        if msvcrt.kbhit():
+            key = msvcrt.getch()
+            if key == b'1':
+                return -1
+
+    return 0
+
+
 # Окно информации о состоянии камер
 # Запускается только при флаге -d | --debug
 def infoWindow(*args, **kwargs):
@@ -223,18 +244,8 @@ def main(*args, **kwargs):
         if argv.debug:
             infoWindow()
 
-        if argv.show:
-
-            key = cv2.waitKey(1) & 0xFF
-            if key == ord('q'):
-                cv2.destroyAllWindows()
-                break
-
-        else:
-            if msvcrt.kbhit():
-                key = msvcrt.getch()
-                if key == b'1':
-                    break
+        if keyboardInput() == -1:
+            break
 
         yield TAG, DATA
 
