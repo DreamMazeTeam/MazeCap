@@ -22,7 +22,7 @@ else:
 
 TAG = "Computer Vision"
 CONST_TEMPLATE_SIZE = (10, 15)
-TEMPLATE_MATCH_VALUE = 0.85
+TEMPLATE_MATCH_VALUE = 0.5
 TEMPLATES = {
     "H": cv2.resize(cv2.imread(f"{TM_PATH}H.png"), CONST_TEMPLATE_SIZE),
     "S": cv2.resize(cv2.imread(f"{TM_PATH}S.png"), CONST_TEMPLATE_SIZE),
@@ -31,12 +31,13 @@ TEMPLATES = {
 COLOR_AREA = 100.0
 DEBUG_COLOR = (255, 0, 0)
 COLORS = {
-    "green": [np.array((55, 250, 250), np.uint8), np.array((65, 255, 255), np.uint8)],
-    "yellow": [np.array((25, 250, 250), np.uint8), np.array((35, 255, 255), np.uint8)],
-    "red": [np.array((0, 250, 250), np.uint8), np.array((10, 255, 255), np.uint8)]
+    "green": [np.array((55, 250, 0), np.uint8), np.array((65, 255, 255), np.uint8)],
+    "yellow": [np.array((25, 250, 0), np.uint8), np.array((35, 255, 255), np.uint8)],
+    "red": [np.array((0, 250, 0), np.uint8), np.array((10, 255, 255), np.uint8)]
 }
 DATA = {}
 CAMERA_SETTINGS = {}
+CAMERA_SIZE = (160*4, 120*4)
 
 """
     Управление мышью в режиме отладки:
@@ -211,6 +212,8 @@ def captureCamera(camera: cv2.VideoCapture, tag: str = None):
                 ]
 
         if argv.show:
+            frame = cv2.resize(frame, CAMERA_SIZE)
+            cv2.resizeWindow(tag, *CAMERA_SIZE)
             if argv.debug and CAMERA_SETTINGS[tag]["HSV"]:
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
                 DATA[tag][3] = frame
@@ -225,6 +228,10 @@ def captureCamera(camera: cv2.VideoCapture, tag: str = None):
 # когда поставим код на робота нужно будет переписать
 def main(*args, **kwargs):
     cap = cv2.VideoCapture(0)  # Это камера
+    cap.set(3, 128)
+    cap.set(4, 128)
+
+
     queue = [  # это очередь из камер
         captureCamera(cap, "Camera1"),
         captureCamera(cap, "Camera2")
