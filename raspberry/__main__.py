@@ -13,6 +13,21 @@
         2) Оснвной цикл - возвращает результаты вычислений (tuple) с видом: (module.Tag, module.Data)
         3) Конец (Выход) - возвращает 0
 
+        Шаблон:
+
+        def main(*args, **kwargs):
+            # Init generator
+            yield 1  # send init code
+
+            # Main loop
+            while <condition>:
+                data = yield None  # Getting data from other modules
+                # some actions
+                yield TAG, DATA  # Returning module tag and data in the end of loop
+
+            # Returning an exit code of generator
+            yield 0
+
 
 """
 

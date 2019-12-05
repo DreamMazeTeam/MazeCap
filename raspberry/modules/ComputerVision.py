@@ -157,10 +157,7 @@ def main(*args, **kwargs):
 
     # это очередь из камер
     queue = [
-        captureCamera(cap, "Camera-first"),
-        captureCamera(cap, "Camera-secod"),
-        captureCamera(cap, "Camera-third"),
-        captureCamera(cap, "Camera-forth")
+        captureCamera(cap, "Camera1"),
     ]
 
     # Запускаем камеры
