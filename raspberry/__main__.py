@@ -28,7 +28,8 @@
             # Returning an exit code of generator
             yield 0
 
-
+    Почему бы не использовать многопоточность?
+    Да потому что возникнут сложности с синхронизацией данных.
 """
 
 import raspberry.modules.ComputerVision as cv  # Потключение модуля
@@ -49,20 +50,20 @@ def initModules(*args, **kwargs) -> None:
 
 # Главный цикл програмы
 def loopModules(*args, **kwargs) -> None:
-    while len(MODULES) > 0:
-        for module in MODULES:
-            ret = module.send(MODULES_DATA)
+    while len(MODULES) > 0:  # Программа будет выполнятся пока есть хотя бы один запушеный модуль
+        for module in MODULES:  # Перебераем модули
+            ret = module.send(MODULES_DATA)  # Начало тела цикла генератора main()
 
-            if ret == 0:
-                MODULES.remove(module)
+            if ret == 0:  # Если генератор вернул код выхода
+                MODULES.remove(module)  # Если генератор вернул код выхода
 
             else:
-                data = module.send(None)
-                if data == 0:
-                    MODULES.remove(module)
+                data = module.send(None)  # Получаем результаты вычеслений модуля
+                if data == 0:  # Если генератор вернул код выхода
+                    MODULES.remove(module)  # Если генератор вернул код выхода
 
                 else:
-                    MODULES_DATA.update({data[0]: data[1]})
+                    MODULES_DATA.update({data[0]: data[1]})  # Обновляем глобальные результаты
 
 
 if __name__ == '__main__':
