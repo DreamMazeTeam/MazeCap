@@ -36,14 +36,54 @@ COLORS = {
     "red": [np.array((0, 250, 250), np.uint8), np.array((10, 255, 255), np.uint8)]
 }
 DATA = {}
+CAMERA_SETTINGS = {}
+
+"""
+    Управление мышью в режиме отладки:
+        1) контрл + двойной щелчок левой кнопки мыши --> смена с цветов с BGR на HSV, и наоборот
+        2) двойной щелчок левой кнопки мыши --> заморозка камеры
+        3) шифт + двойной щелчок левой кнопки мыши --> показывает цвет пикселя            
+"""
 
 
 # Фунция для работы с окнами в cv2.namedWindow
 # Исключительно для отладки
 def mouseCallback(event, x, y, flag, param) -> None:
-    # Ставит камеру на паузу
-    if event == cv2.EVENT_LBUTTONDBLCLK:
-        DATA[param][0] = not DATA[param][0]
+    if flag == 9 and event == cv2.EVENT_LBUTTONDBLCLK:  # контрл + двойной щелчок левой кнопки мыши
+        CAMERA_SETTINGS[param]["HSV"] = not CAMERA_SETTINGS[param]["HSV"]
+    elif flag == 17 and event == cv2.EVENT_LBUTTONDBLCLK:  # шифт + двойной щелчок левой кнопки мыши
+        CAMERA_SETTINGS[param]["PX_COLOR"] = DATA[param][3][y, x]
+    elif flag == 33 and event == cv2.EVENT_LBUTTONDBLCLK:  # контрл + двойной щелчок левой кнопки мыши
+        print("alt")
+    elif flag == 1 and event == cv2.EVENT_LBUTTONDBLCLK:  # Дабл клик
+        DATA[param][0] = not DATA[param][0]  # Ставит камеру на паузу
+
+
+# Окно информации о состоянии камер
+# Запускается только при флаге -d | --debug
+def infoWindow(*args, **kwargs):
+    image = np.zeros((512, 512, 3), np.uint8)
+    default = cv2.FONT_ITALIC, 0.5, (255, 0, 0), 1
+    x, y = 10, 30
+
+    cv2.putText(image, "Camera settings", (x, y), *default)
+    for camera in CAMERA_SETTINGS:
+        cv2.putText(image, f"{camera}:", (x + 20, y + 30), *default)
+        y += 30
+
+        for setting in CAMERA_SETTINGS[camera]:
+            cv2.putText(image, f"{setting}: {CAMERA_SETTINGS[camera][setting]}", (x + 40, y + 30), *default)
+            y += 30
+
+
+    cv2.putText(image, "Camera data", (x, y+30), *default)
+    y += 30
+
+    for camera in DATA:
+        cv2.putText(image, f"{camera} -> {DATA[camera][:-1]}", (x+20, y+30), *default)
+        y += 30
+
+    cv2.imshow("INFO", image)
 
 
 # Функция поиска контуров в кадре
@@ -125,25 +165,35 @@ def getColorFromFrame(frame: np.ndarray) -> str:
 # Принимает обьект cv2.VideoCapture и тэг функции
 # Тэг нужен что бы понять какая камера видит цвет или букву
 # Генерирует словарь (dict) вида:
-# {тэг: [статус, буква, цвет] }, пример: {"camera_left: [True, "H", "red"]}
+# {тэг: [статус, буква, цвет, (указатель)кадр] }, пример: {"camera_left: [True, "H", "red", np.ndarray()]}
 # статус показывает работает ли камера или нет
 def captureCamera(camera: cv2.VideoCapture, tag: str = None):
-    DATA[tag] = [True, "", ""]
+    frame = np.zeros((512, 512, 3), np.uint8)
+    DATA[tag] = [True, "", "", frame]
+    CAMERA_SETTINGS[tag] = {"HSV": False}
     yield None
 
+    if argv.debug:
+        cv2.namedWindow(tag)
+        cv2.setMouseCallback(tag, mouseCallback, param=tag)
+
     while camera.isOpened():
-        flag, frame = camera.read()
+        if DATA[tag][0]:
+            flag, frame = camera.read()
 
-        if flag and DATA[tag][0]:
+            if flag:
+                DATA[tag] = [
+                    True,
+                    getLetterFromFrame(frame),
+                    getColorFromFrame(frame),
+                    frame
+                ]
 
-            DATA[tag] = [
-                True,
-                getLetterFromFrame(frame),
-                getColorFromFrame(frame)
-            ]
-
-            if argv.show:
-                cv2.imshow(tag, frame)
+        if argv.show:
+            if argv.debug and CAMERA_SETTINGS[tag]["HSV"]:
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+                DATA[tag][3] = frame
+            cv2.imshow(tag, frame)
 
         yield None
 
@@ -153,25 +203,16 @@ def captureCamera(camera: cv2.VideoCapture, tag: str = None):
 # возвращает целое число, поже для обработки ошибок
 # когда поставим код на робота нужно будет переписать
 def main(*args, **kwargs):
-    cap = cv2.VideoCapture(0)
-
-    # это очередь из камер
-    queue = [
+    cap = cv2.VideoCapture(0)  # Это камера
+    queue = [  # это очередь из камер
         captureCamera(cap, "Camera1"),
+        captureCamera(cap, "Camera2")
     ]
 
-    # Запускаем камеры
     for camera in queue:
-        camera.send(None)
+        camera.send(None)  # Запускаем камеры
 
-    # Привязываем фунцию обработки мыши
-    if argv.show:
-        for tag in DATA:
-            cv2.namedWindow(tag)
-            cv2.setMouseCallback(tag, mouseCallback, param=tag)
-
-    # Start up
-    yield 1
+    yield 1  # Start up
 
     while True:
         data = yield None
@@ -179,7 +220,11 @@ def main(*args, **kwargs):
         for camera in queue:
             camera.send(None)
 
+        if argv.debug:
+            infoWindow()
+
         if argv.show:
+
             key = cv2.waitKey(1) & 0xFF
             if key == ord('q'):
                 cv2.destroyAllWindows()
@@ -198,6 +243,7 @@ def main(*args, **kwargs):
 
 
 if __name__ == "__main__":
+    argv = parser.parse_args("-d --show local".split())
     mod = main()
     while mod.send(None) != 0:
         pass
