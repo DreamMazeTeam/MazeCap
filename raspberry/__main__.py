@@ -60,7 +60,7 @@ def loopModules(*args, **kwargs) -> None:
             else:
                 data = module.send(None)  # Получаем результаты вычеслений модуля
                 if data == 0:  # Если генератор вернул код выхода
-                    MODULES.remove(module)  # Если генератор вернул код выхода
+                    MODULES.remove(module)  # Удаляем генератор из списка
 
                 else:
                     MODULES_DATA.update({data[0]: data[1]})  # Обновляем глобальные результаты

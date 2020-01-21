@@ -189,13 +189,14 @@ def getColorFromFrame(frame: np.ndarray) -> str:
 # Генерирует словарь (dict) вида:
 # {тэг: [статус, буква, цвет, (указатель)кадр] }, пример: {"camera_left: [True, "H", "red", np.ndarray()]}
 # статус показывает работает ли камера или нет
-def captureCamera(camera: cv2.VideoCapture, tag: str = None):
-    frame = np.zeros((512, 512, 3), np.uint8)
-    DATA[tag] = [True, "", "", frame]
-    CAMERA_SETTINGS[tag] = {"HSV": False}
-    yield None
+def captureCamera(camera: cv2.VideoCapture, tag: str = None, resolution: list = None):
+    resolution = [512, 512] if resolution is None else resolution  # Параметр по умолчанию
+    frame = np.zeros((512, 512, 3), np.uint8)  # Пустой кадр
+    DATA[tag] = [True, "", "", frame]  # Начальные результаты камеры
+    CAMERA_SETTINGS[tag] = {"HSV": False}  # Дефолтные настройки камеры
+    yield None  # Конец инициализации генератора самеры
 
-    if argv.debug and argv.show:
+    if argv.debug and argv.show:  #
         cv2.namedWindow(tag)
         cv2.setMouseCallback(tag, mouseCallback, param=tag)
 
@@ -228,8 +229,8 @@ def captureCamera(camera: cv2.VideoCapture, tag: str = None):
 # когда поставим код на робота нужно будет переписать
 def main(*args, **kwargs):
     cap = cv2.VideoCapture(0)  # Это камера
-    cap.set(3, 128)
-    cap.set(4, 128)
+    cap.set(3, 128)  # Высота 128 писелей
+    cap.set(4, 128)  # Ширина 128 пикселей
 
 
     queue = [  # это очередь из камер
