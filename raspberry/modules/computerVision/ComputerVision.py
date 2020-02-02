@@ -1,26 +1,18 @@
 import cv2
-import msvcrt
 import argparse
 import numpy as np
 
-# Аргументы запуска скрипта
-# --display [remote, local]
-# Выводить ли изображение, если да то куда
-# remote - удаленно
-# local - локально
-parser = argparse.ArgumentParser()
-parser.add_argument('-d', "--debug", action="store_true", default=False)
-parser.add_argument('-s', "--show", type=str, choices=["remote", "local"], action="store", default=False)
-argv = parser.parse_args()
 
 
-# Константы
-if __name__ == "__main__":
-    TM_PATH = "..\\templates\\"
-else:
-    TM_PATH = "templates\\"
+#  Глобальные переменые модуля
+TAG = "ComputerVision"
+CAMERA_SETTINGS = {}
+DATA = {}
 
-TAG = "Computer Vision"
+#  Настройки модуля
+TM_PATH = "images/templates/"
+
+#  Настройки изображения
 CONST_TEMPLATE_SIZE = (10, 15)
 TEMPLATE_MATCH_VALUE = 0.5
 TEMPLATES = {
@@ -28,16 +20,22 @@ TEMPLATES = {
     "S": cv2.resize(cv2.imread(f"{TM_PATH}S.png"), CONST_TEMPLATE_SIZE),
     "U": cv2.resize(cv2.imread(f"{TM_PATH}U.png"), CONST_TEMPLATE_SIZE),
 }
+
+#  Настройки камер
 COLOR_AREA = 100.0
 DEBUG_COLOR = (255, 0, 0)
+CAMERA_SIZE = (160*4, 120*4)
 COLORS = {
     "green": [np.array((55, 250, 0), np.uint8), np.array((65, 255, 255), np.uint8)],
     "yellow": [np.array((25, 250, 0), np.uint8), np.array((35, 255, 255), np.uint8)],
     "red": [np.array((0, 250, 0), np.uint8), np.array((10, 255, 255), np.uint8)]
 }
-DATA = {}
-CAMERA_SETTINGS = {}
-CAMERA_SIZE = (160*4, 120*4)
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-d', "--debug", action="store_true", default=False)
+parser.add_argument('-s', "--show", type=str, choices=["remote", "local"], action="store", default=False)
+argv = parser.parse_args()
 
 """
     Управление мышью в режиме отладки:
@@ -55,34 +53,12 @@ def mouseCallback(event, x, y, flag, param) -> None:
     elif flag == 17 and event == cv2.EVENT_LBUTTONDBLCLK:  # шифт + двойной щелчок левой кнопки мыши
         CAMERA_SETTINGS[param]["PX_COLOR"] = DATA[param][3][y, x]
     elif flag == 33 and event == cv2.EVENT_LBUTTONDBLCLK:  # контрл + двойной щелчок левой кнопки мыши
-        print("alt")
+        print("alt")  # Пока ничего=)
     elif flag == 1 and event == cv2.EVENT_LBUTTONDBLCLK:  # Дабл клик
         DATA[param][0] = not DATA[param][0]  # Ставит камеру на паузу
 
 
-# Ввод с клавиатуры
-# Метод чтения зависит от флага запуска
-# Если есть флаг --show то чтение будет происходить через cv2
-# Иначе с помощью модуля msvcrt
-def keyboardInput(*args, **kwargs) -> int:
-    if argv.show:
-
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord('q'):
-            cv2.destroyAllWindows()
-            return -1
-
-    else:
-        if msvcrt.kbhit():
-            key = msvcrt.getch()
-            if key == b'1':
-                return -1
-
-    return 0
-
-
 # Окно информации о состоянии камер
-# Запускается только при флаге -d | --debug
 def infoWindow(*args, **kwargs):
     image = np.zeros((512, 512, 3), np.uint8)
     default = cv2.FONT_ITALIC, 0.5, (255, 0, 0), 1
@@ -183,6 +159,20 @@ def getColorFromFrame(frame: np.ndarray) -> str:
     return ""
 
 
+# Ввод с клавиатуры
+# Метод чтения зависит от флага запуска
+# Если есть флаг --show то чтение будет происходить через cv2
+# Иначе с помощью модуля msvcrt
+def keyboardInput(*args, **kwargs) -> int:
+    if argv.show:
+
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'):
+            cv2.destroyAllWindows()
+            return -1
+    return 0
+
+
 # Генератор захвата камеры
 # Принимает обьект cv2.VideoCapture и тэг функции
 # Тэг нужен что бы понять какая камера видит цвет или букву
@@ -263,5 +253,6 @@ def main(*args, **kwargs):
 
 if __name__ == "__main__":
     mod = main()
+    argv = parser.parse_args(("-d --show local".split()))
     while mod.send(None) != 0:
         pass
